@@ -16,6 +16,7 @@ return new class extends Migration
             $table->integer('category_id');
             $table->integer('user_id');
             $table->string('client');
+            $table->integer('total');
             $table->timestamps();
         });
     }

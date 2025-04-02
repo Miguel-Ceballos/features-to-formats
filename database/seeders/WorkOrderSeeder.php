@@ -25,6 +25,7 @@ class WorkOrderSeeder extends Seeder
                     'category_id' => rand(1, 3),
                     'user_id' => rand(1, 3),
                     'client' => rand(1, 3),
+                    'total' => rand(50000, 150000),
                     'created_at' => $randomDate,
                     'updated_at' => $randomDate,
                 ]);
