@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Models\Category;
 use App\Models\User;
 use App\Models\WorkOrder;
 use Illuminate\Support\Carbon;
@@ -14,13 +15,18 @@ class WorkOrders extends Component
     public $search = '';
     public $month = '';
     public $series = [];
+    public $users = [];
+    public $categories = [];
+
+    public $workOrdersCategory = [];
 
     public function mount() : void
     {
         $this->series = $this->getSeries();
+        $this->users = $this->getUsers();
+        $this->categories = $this->getCategories();
         $this->getUsers();
-//        dd($this->getMonths());
-        //        dd($this->series);
+        $this->workOrdersCategory = $this->getWorkOrdersByCategory();
     }
 
     public function getUsers()
@@ -60,6 +66,23 @@ class WorkOrders extends Component
         ];
     }
 
+    public function getUsersNames()
+    {
+        return User::pluck('name');
+    }
+
+    public function getCategories()
+    {
+        return Category::pluck('name');
+    }
+
+    public function getWorkOrders()
+    {
+        return WorkOrder::orderBy('created_at', 'desc')
+            ->when($this->month, fn($query) => $query->where('created_at', 'like', '%' . $this->month . '%'))
+            ->paginate(10);
+    }
+
     public function render()
     {
         return view('livewire.work-orders', [
@@ -67,17 +90,35 @@ class WorkOrders extends Component
         ]);
     }
 
-    public function getWorkOrders()
+    public function getWorkOrdersByCategory()
     {
-        return WorkOrder::orderBy('created_at', 'desc')
-            ->when($this->search, fn($query) => $query->where('client', 'like', '%' . $this->search . '%'))
-            ->when($this->month, fn($query) => $query->where('created_at', 'like', '%' . $this->month . '%'))
-            ->paginate(10);
+        $array = [];
+
+        foreach (Category::all() as $category) {
+            $totalCategory = [];
+            foreach (User::all() as $user) {
+                $totalCategory[] = $user->workOrders()
+                    ->when($this->month, fn($query) => $query->where('created_at', 'like', '%' . $this->month . '%'))
+                    ->where('category_id', $category->id)
+                    ->sum('total');
+            }
+            $array[] = [
+                'name' => $category->name,
+                'group' => 'workOrder',
+                'data' => $totalCategory,
+            ];
+        }
+
+        return $array;
     }
 
     public function updatedMonth()
     {
         $this->series = $this->getSeries();
-//        dd($this->series);
+        $this->series = $this->getSeries();
+        $this->users = $this->getUsers();
+        $this->categories = $this->getCategories();
+        $this->getUsers();
+        $this->workOrdersCategory = $this->getWorkOrdersByCategory();
     }
 }

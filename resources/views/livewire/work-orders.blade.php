@@ -153,6 +153,36 @@
                 </div>
             </div>
         </div>
+
+        <div x-data="columnChart({categories: @entangle('users'), series: @entangle('workOrdersCategory')})"
+             x-init="$watch('series', () => { showChart() })"
+             class="max-w-full w-full bg-white rounded-lg shadow-sm dark:bg-zinc-700 p-4 md:p-6">
+            <div class="flex justify-between items-start w-full">
+                <div class="flex-col items-center">
+                    <div class="flex items-center mb-1">
+                        <h5 class="text-xl font-bold leading-none text-gray-900 dark:text-white me-1">Ordenes de
+                            trabajo
+                        </h5>
+                    </div>
+                </div>
+            </div>
+            <!-- Line Chart -->
+            <div class="py-6" id="column-chart"></div>
+            <div class="grid grid-cols-1 items-center border-gray-200 border-t dark:border-gray-700 justify-between">
+                <div class="flex justify-between items-center pt-5">
+                    <a
+                        href="#"
+                        class="uppercase text-sm font-semibold inline-flex items-center rounded-lg text-blue-600 hover:text-blue-700 dark:hover:text-blue-500  hover:bg-gray-100 dark:hover:bg-gray-700 dark:focus:ring-gray-700 dark:border-gray-700 px-3 py-2">
+                        Traffic analysis
+                        <svg class="w-2.5 h-2.5 ms-1.5 rtl:rotate-180" aria-hidden="true"
+                             xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="m1 9 4-4-4-4"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="relative overflow-x-auto shadow-md sm:rounded-lg mt-14">
@@ -292,13 +322,69 @@
                         // ApexCharts.exec('pie-chart', 'updateSeries', [this.series, true]);
                         /!*const myChart = ApexCharts.getChartByID("pie-chart");
                         myChart.destroy();
-
                         const newChart = new ApexCharts(document.getElementById("pie-chart"), this.getChartOptions());
                         newChart.render();*!/
                     } else {
                         const chart = new ApexCharts(document.getElementById("pie-chart"), this.getChartOptions());
                         chart.render();
                     }*/
+                },
+            }))
+
+            Alpine.data('columnChart', (data) => ({
+                series: data.series,
+                categories: data.categories,
+                init() {
+                    this.showChart();
+                },
+                getChartOptions() {
+                    return  {
+                        series: this.series,
+                        chart: {
+                            type: 'bar',
+                            height: 350,
+                            stacked: true,
+                        },
+                        stroke: {
+                            width: 1,
+                            colors: ['#fff']
+                        },
+                        dataLabels: {
+                            formatter: (val) => {
+                                return val / 1000 + 'K'
+                            }
+                        },
+                        plotOptions: {
+                            bar: {
+                                horizontal: false
+                            }
+                        },
+                        xaxis: {
+                            categories: this.categories,
+                        },
+                        fill: {
+                            opacity: 1
+                        },
+                        colors: ['#80c7fd', '#008FFB', '#80f1cb', '#00E396'],
+                        yaxis: {
+                            labels: {
+                                formatter: (val) => {
+                                    return val / 1000 + 'K'
+                                }
+                            }
+                        },
+                        legend: {
+                            position: 'top',
+                            horizontalAlign: 'left'
+                        }
+                    };
+                },
+                showChart() {
+                    if(document.getElementById("column-chart") && typeof ApexCharts !== 'undefined') {
+                        const chart = new ApexCharts(document.getElementById("column-chart"), this.getChartOptions());
+                        chart.updateSeries([this.series, this.categories]);
+                        chart.render();
+                    }
                 },
             }))
         });
